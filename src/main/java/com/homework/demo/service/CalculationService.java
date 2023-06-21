@@ -1,22 +1,18 @@
 package com.homework.demo.service;
 
-import com.homework.demo.enums.RiskType;
+import com.homework.demo.constants.AppConstants;
 import com.homework.demo.request.Bicycle;
 import com.homework.demo.request.SumInsuredAndPremiumsCalculationRequest;
 import com.homework.demo.response.Attributes;
 import com.homework.demo.response.CalculationObject;
 import com.homework.demo.response.PremiumResponse;
 import com.homework.demo.response.Risk;
+import com.homework.demo.service.support.CalculationScriptSupport;
 import com.homework.demo.validation.RequestValidator;
 import groovy.lang.GroovyObject;
-import groovy.util.GroovyScriptEngine;
-import groovy.util.ResourceException;
-import groovy.util.ScriptException;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Year;
@@ -26,16 +22,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CalculationService {
 
-    private final GroovyScriptEngine engine;
-    private GroovyObject calculationScripts;
-
-    @PostConstruct
-    void initCalculationScripts() throws ScriptException, ResourceException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        calculationScripts = (GroovyObject) engine.loadScriptByName("BaseScript.groovy").getDeclaredConstructor().newInstance();
-    }
+    private final CalculationScriptSupport support;
 
     public PremiumResponse calculateSumInsuredAndPremiums(SumInsuredAndPremiumsCalculationRequest request) {
         new RequestValidator().validateRequest(request);
+        support.validateCalculationScriptsMap(request);
+
         PremiumResponse response = new PremiumResponse();
         response.initObjects();
 
@@ -57,7 +49,7 @@ public class CalculationService {
         object.setSumInsured(bicycle.getSumInsured());
 
         double premium = bicycle.getRisks().stream()
-                .map(r -> initRisk(bicycle, r))
+                .map(r -> createAndCalculateRisk(bicycle, r))
                 .peek(r -> object.getRisks().add(r))
                 .map(Risk::getPremium)
                 .reduce(0d, Double::sum);
@@ -66,24 +58,25 @@ public class CalculationService {
         return object;
     }
 
-    private Risk initRisk(Bicycle bicycle, RiskType riskType) {
+    private Risk createAndCalculateRisk(Bicycle bicycle, String riskType) {
         Risk risk = new Risk(riskType);
-        risk.setPremium(calculateRiskPremium(riskType, bicycle));
-        risk.setSumInsured(calculateRiskInsuranceSum(riskType, bicycle.getSumInsured()));
+        GroovyObject calculationScripts = support.getScriptsByRiskType(riskType);
+        risk.setPremium(calculateRiskPremium(riskType, bicycle, calculationScripts));
+        risk.setSumInsured(calculateRiskInsuranceSum(riskType, bicycle.getSumInsured(), calculationScripts));
         return risk;
     }
 
-    private double calculateRiskInsuranceSum(RiskType riskType, double sumInsured) {
-        return Optional.ofNullable((Double) calculationScripts.invokeMethod("calculateRiskInsuranceSum", new Object[]{riskType.name(), sumInsured}))
+    private double calculateRiskInsuranceSum(String riskType, double sumInsured, GroovyObject calculationScripts) {
+        return Optional.ofNullable((Double) calculationScripts.invokeMethod("calculateRiskInsuranceSum", new Object[]{sumInsured}))
                 .map(BigDecimal::new)
                 .map(d -> d.setScale(2, RoundingMode.HALF_UP).doubleValue())
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to calculate risk insurance sum for risk type %s", riskType)));
     }
 
-    private double calculateRiskPremium(RiskType riskType, Bicycle bicycle) {
+    private double calculateRiskPremium(String riskType, Bicycle bicycle, GroovyObject calculationScripts) {
         int age = Year.now().getValue() - bicycle.getManufactureYear();
         return Optional.ofNullable((Double) calculationScripts.invokeMethod("calculateRiskPremium",
-                        new Object[]{riskType.name(), bicycle.getSumInsured(), age, bicycle.getMake(), bicycle.getModel(), bicycle.getRisks().size()}))
+                        new Object[]{riskType, bicycle.getSumInsured(), age, bicycle.getMake(), bicycle.getModel(), bicycle.getRisks().size()}))
                 .map(BigDecimal::new)
                 .map(d -> d.setScale(2, RoundingMode.HALF_UP).doubleValue())
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to calculate risk premium for risk type %s", riskType)));

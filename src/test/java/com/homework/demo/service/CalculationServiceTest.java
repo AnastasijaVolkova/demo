@@ -3,7 +3,6 @@ package com.homework.demo.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.homework.demo.configuration.AppConfig;
 import com.homework.demo.enums.Coverage;
-import com.homework.demo.enums.RiskType;
 import com.homework.demo.request.SumInsuredAndPremiumsCalculationRequest;
 import com.homework.demo.response.Attributes;
 import com.homework.demo.response.CalculationObject;
@@ -60,16 +59,16 @@ class CalculationServiceTest {
         assertThat(actual.getObjects()).hasSize(3);
         assertThat(actual.getObjects().get(0)).isEqualToIgnoringGivenFields(expectedCalculationObject1, "risks");
         assertThat(actual.getObjects().get(0).getRisks()).containsExactlyInAnyOrder(
-                createRisk(RiskType.THEFT, 1000, 16.88),
-                createRisk(RiskType.DAMAGE, 500, 5.41),
-                createRisk(RiskType.THIRD_PARTY_DAMAGE, 100, 13.5)
+                createRisk("THEFT", 1000, 16.88),
+                createRisk("DAMAGE", 500, 5.41),
+                createRisk("THIRD_PARTY_DAMAGE", 100, 13.5)
         );
         assertThat(actual.getObjects().get(1)).isEqualToIgnoringGivenFields(expectedCalculationObject2, "risks");
-        assertThat(actual.getObjects().get(1).getRisks()).containsExactly(createRisk(RiskType.DAMAGE, 112.5, 6.84));
+        assertThat(actual.getObjects().get(1).getRisks()).containsExactly(createRisk("DAMAGE", 112.5, 6.84));
         assertThat(actual.getObjects().get(2)).isEqualToIgnoringGivenFields(expectedCalculationObject3, "risks");
         assertThat(actual.getObjects().get(2).getRisks()).containsExactlyInAnyOrder(
-                createRisk(RiskType.DAMAGE, 50, 9.71),
-                createRisk(RiskType.THIRD_PARTY_DAMAGE, 100, 15.2)
+                createRisk("DAMAGE", 50, 9.71),
+                createRisk("THIRD_PARTY_DAMAGE", 100, 15.2)
         );
     }
 
@@ -86,7 +85,7 @@ class CalculationServiceTest {
         return object;
     }
 
-    private Risk createRisk(RiskType riskType, double sumInsured, double premium) {
+    private Risk createRisk(String riskType, double sumInsured, double premium) {
         Risk risk = new Risk();
         risk.setRiskType(riskType);
         risk.setSumInsured(sumInsured);

@@ -51,12 +51,20 @@ and proceed further with validation part.
 
 RequestValidator.class accepts request and validates each sent bicycle to be newer than 10 years and each sum insured to be less than 10000. If validation fails custom exception is thrown (RequestValidationException.class) with message that represents make, model and manufacture year of bicycle which caused validation to fail.
 
--------------
+---
 
-After validation is made code proceed with response creation and calculations. For each bicycle sent in request CalculationObject.class is created. In accordance with make, model and manufacture year information Attributes.class is formed with corresponding information.  Coverage and sum insured information is set in accordance with information in request body as well. Then for each risk type received in request Risk.class is formed and calculations performed to set risk insured sum and premium. To perform calculations BaseScript.groovy scripts are used. For each separate calculation related method is invoked and required parameters passed to make calculations happen and filter required information for formulas.
-
+After validation is made code proceed with response creation and calculations. For each bicycle sent in request CalculationObject.class is created. In accordance with make, model and manufacture year information Attributes.class is formed with corresponding information. 
+Coverage and sum insured information is set in accordance with information in request body as well. Then for each risk type received in request Risk.class is formed and calculations performed to set risk insured sum and premium. 
+To perform calculations .groovy scripts are used. For each separate calculation and risk type related method is invoked and required parameters passed to make calculations happen and filter required information for formulas.
 Once calculations are made and results set, using .reduce method premiums are being summed up and set to calculation object which represents sum of premiums for all required risks.
-
 Once done additional .reduce method is invoked to calculate premiums for all bicycles and set total premium sum to be paid.
-
 After that response is formed and sent back.
+
+---
+
+### How to add new risk type
+
+To add new risk type 2 calculation (sum insured, premium) rules must be added first as separate script 
+with name starting with 'RiskPayment' which extends BaseCalculationScript.groovy and implements required methods. 
+Rules must be added in ./src/main/resources/businessrules package. 
+Once aforementioned requirements are met new risk type can be passed to API request.

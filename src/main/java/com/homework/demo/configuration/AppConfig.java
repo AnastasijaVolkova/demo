@@ -1,5 +1,6 @@
 package com.homework.demo.configuration;
 
+import com.homework.demo.constants.AppConstants;
 import groovy.util.GroovyScriptEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,7 @@ public class AppConfig {
     public GroovyScriptEngine groovyScriptEngine() {
         URL url;
         try {
-            url = new File("./").toURI().toURL();
+            url = new File(AppConstants.GROOVY_RULES_PATH).toURI().toURL();
         } catch (MalformedURLException e) {
             log.error("Exception while creating url for groovy script engine", e);
             throw new RuntimeException(e);

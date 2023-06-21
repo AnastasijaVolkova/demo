@@ -1,7 +1,6 @@
 package com.homework.demo.request;
 
 import com.homework.demo.enums.Coverage;
-import com.homework.demo.enums.RiskType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -20,6 +19,6 @@ public class Bicycle {
     private Integer manufactureYear;
     @NotNull
     private Double sumInsured;
-    private Set<RiskType> risks = Collections.singleton(RiskType.THEFT);
+    private Set<String> risks = Collections.singleton("THEFT");
 
 }

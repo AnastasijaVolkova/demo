@@ -2,13 +2,11 @@ package com.homework.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.homework.demo.enums.Coverage;
-import com.homework.demo.enums.RiskType;
 import com.homework.demo.request.Bicycle;
 import com.homework.demo.request.SumInsuredAndPremiumsCalculationRequest;
 import com.homework.demo.response.PremiumResponse;
 import com.homework.demo.service.CalculationService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -58,7 +56,7 @@ class CalculationControllerTest {
         bicycle.setCoverage(Coverage.EXTRA);
         bicycle.setManufactureYear(2015);
         bicycle.setSumInsured(1000.0);
-        bicycle.setRisks(Sets.newSet(RiskType.THEFT, RiskType.DAMAGE, RiskType.THIRD_PARTY_DAMAGE));
+        bicycle.setRisks(Sets.newSet("THEFT", "DAMAGE", "THIRD_PARTY_DAMAGE"));
         request.setBicycles(Collections.singletonList(bicycle));
 
         assertEquals(result.getResponse().getContentAsString(), "{\"objects\":[],\"premium\":112.04}");
